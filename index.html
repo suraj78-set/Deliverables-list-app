@@ -191,7 +191,17 @@
         });
       });
 
-    searchInput.addEventListener("input", debounce(updateResult, 150));
+    // Immediate result update on input or dropdown selection
+    searchInput.addEventListener("input", () => {
+      if (searchInput.value.trim().length > 0) updateResult();
+    });
+
+    // Fix for datalist selection not triggering input
+    searchInput.addEventListener("blur", () => {
+      setTimeout(() => {
+        if (searchInput.value.trim().length > 0) updateResult();
+      }, 100);
+    });
 
     function updateResult() {
       const inputValue = searchInput.value.trim().toLowerCase();
@@ -215,14 +225,6 @@
       }
       html += "</ul>";
       resultsDiv.innerHTML = html;
-    }
-
-    function debounce(func, delay) {
-      let timer;
-      return function () {
-        clearTimeout(timer);
-        timer = setTimeout(() => func.apply(this, arguments), delay);
-      };
     }
 
     function downloadResult() {
