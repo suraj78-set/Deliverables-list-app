@@ -7,8 +7,10 @@
     body {
       font-family: Arial, sans-serif;
       background-color: #f5f5f5;
+      color: #333;
       padding: 20px;
       text-align: center;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     .header {
@@ -19,11 +21,13 @@
 
     .logo {
       height: 60px;
+      transition: filter 0.3s ease;
     }
 
     .iac-logo {
       height: 50px;
       margin-bottom: 10px;
+      transition: filter 0.3s ease;
     }
 
     h1 {
@@ -76,6 +80,29 @@
       color: red;
       margin-top: 10px;
     }
+
+    /* Dark mode */
+    .dark-mode {
+      background-color: #1e1e1e;
+      color: #f5f5f5;
+    }
+
+    .dark-mode li {
+      background-color: #333;
+    }
+
+    .dark-mode .logo,
+    .dark-mode .iac-logo {
+      filter: brightness(150%);
+    }
+
+    /* Dark mode toggle button */
+    #darkModeToggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
@@ -93,18 +120,22 @@
   <datalist id="domainList"></datalist>
   <br><br>
 
-  <button onclick="downloadCSV()">⬇️ Download CSV</button>
+  <button onclick="downloadResult()">⬇️ Download Result</button>
   <button onclick="printResults()">🖨️ Export to PDF</button>
 
   <div id="results"></div>
   <div id="error"></div>
 
+  <button id="darkModeToggle" onclick="toggleDarkMode()">🌙 Dark Mode</button>
+
   <script>
     let data = [];
+    let currentResult = "";
     const searchInput = document.getElementById("search");
     const domainList = document.getElementById("domainList");
     const resultsDiv = document.getElementById("results");
     const errorDiv = document.getElementById("error");
+    const darkModeBtn = document.getElementById("darkModeToggle");
 
     // Load CSV data
     fetch("domain_deliverables.csv")
@@ -139,6 +170,7 @@
 
       resultsDiv.innerHTML = "";
       errorDiv.textContent = "";
+      currentResult = "";
 
       if (!match) {
         errorDiv.textContent = "Domain not found. Please select from the list.";
@@ -146,31 +178,51 @@
       }
 
       let html = `<h2>${match["Domain Name"]}</h2><ul>`;
+      let deliverables = [];
+
       for (const key in match) {
         if (key.toLowerCase().includes("deliverable") && match[key]) {
           html += `<li>${match[key]}</li>`;
+          deliverables.push(match[key]);
         }
       }
+
       html += "</ul>";
       resultsDiv.innerHTML = html;
+
+      currentResult = `Domain Name,Deliverables\n${match["Domain Name"]},"${deliverables.join('; ')}"`;
     }
 
-    function downloadCSV() {
+    function downloadResult() {
+      if (!currentResult) {
+        alert("Please search and select a domain first.");
+        return;
+      }
+      const blob = new Blob([currentResult], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
-      link.href = "domain_deliverables.csv";
-      link.download = "domain_deliverables.csv";
+      link.href = URL.createObjectURL(blob);
+      link.download = "selected_domain_deliverables.csv";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
     function printResults() {
+      if (!resultsDiv.innerHTML.trim()) {
+        alert("Please search and select a domain first.");
+        return;
+      }
       const printWindow = window.open('', '', 'width=800,height=600');
-      printWindow.document.write('<html><head><title>Deliverables</title></head><body>');
+      printWindow.document.write('<html><head><title>Print</title></head><body>');
       printWindow.document.write(resultsDiv.innerHTML);
       printWindow.document.write('</body></html>');
       printWindow.document.close();
       printWindow.print();
+    }
+
+    function toggleDarkMode() {
+      const isDark = document.body.classList.toggle("dark-mode");
+      darkModeBtn.innerText = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
     }
   </script>
 </body>
