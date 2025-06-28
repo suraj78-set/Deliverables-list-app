@@ -81,7 +81,6 @@
       margin-top: 10px;
     }
 
-    /* Dark mode */
     .dark-mode {
       background-color: #1e1e1e;
       color: #f5f5f5;
@@ -96,7 +95,6 @@
       filter: brightness(150%);
     }
 
-    /* Dark mode toggle button */
     #darkModeToggle {
       position: fixed;
       bottom: 20px;
@@ -130,14 +128,12 @@
 
   <script>
     let data = [];
-    let currentResult = "";
     const searchInput = document.getElementById("search");
     const domainList = document.getElementById("domainList");
     const resultsDiv = document.getElementById("results");
     const errorDiv = document.getElementById("error");
     const darkModeBtn = document.getElementById("darkModeToggle");
 
-    // Load CSV data
     fetch("domain_deliverables.csv")
       .then(response => response.text())
       .then(csv => {
@@ -160,7 +156,6 @@
         });
       });
 
-    // Handle input and selection
     searchInput.addEventListener("input", updateResult);
     searchInput.addEventListener("change", updateResult);
 
@@ -170,7 +165,6 @@
 
       resultsDiv.innerHTML = "";
       errorDiv.textContent = "";
-      currentResult = "";
 
       if (!match) {
         errorDiv.textContent = "Domain not found. Please select from the list.";
@@ -178,27 +172,32 @@
       }
 
       let html = `<h2>${match["Domain Name"]}</h2><ul>`;
-      let deliverables = [];
-
       for (const key in match) {
         if (key.toLowerCase().includes("deliverable") && match[key]) {
           html += `<li>${match[key]}</li>`;
-          deliverables.push(match[key]);
         }
       }
-
       html += "</ul>";
       resultsDiv.innerHTML = html;
-
-      currentResult = `Domain Name,Deliverables\n${match["Domain Name"]},"${deliverables.join('; ')}"`;
     }
 
     function downloadResult() {
-      if (!currentResult) {
+      const inputValue = searchInput.value.trim().toLowerCase();
+      const match = data.find(row => row["Domain Name"].trim().toLowerCase() === inputValue);
+      if (!match) {
         alert("Please search and select a domain first.");
         return;
       }
-      const blob = new Blob([currentResult], { type: "text/csv;charset=utf-8;" });
+
+      let csv = "Domain Name\n" + match["Domain Name"] + "\n\nDeliverables\n";
+
+      Object.keys(match).forEach(key => {
+        if (key.toLowerCase().includes("deliverable") && match[key]) {
+          csv += match[key] + "\n";
+        }
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = "selected_domain_deliverables.csv";
