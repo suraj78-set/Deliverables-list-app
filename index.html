@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Domain Deliverables Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+      text-align: center;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      height: 60px;
+    }
+    .iac-logo {
+      height: 50px;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    input {
+      width: 300px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+    li {
+      background: #EA7317;
+      color: white;
+      padding: 10px;
+      margin: 5px auto;
+      width: 60%;
+      border-radius: 5px;
+    }
+    #error {
+      color: red;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="ccpl_logo.png" alt="CCPL Logo" class="logo">
+    <img src="gac_foundation_logo.png" alt="GAC Logo" class="logo">
+  </div>
+  <img src="iac_Logo.png" alt="IAC Logo" class="iac-logo">
+  <h1>Domain Deliverables Viewer</h1>
+
+  <input type="text" id="search" list="domainList" placeholder="Search Domain Name..." />
+  <datalist id="domainList"></datalist>
+
+  <div id="results"></div>
+  <div id="error"></div>
+
+  <script>
+    let data = [];
+    let domainList = document.getElementById("domainList");
+
+    // Load CSV
+    fetch("domain_deliverables.csv")
+      .then(response => response.text())
+      .then(csv => {
+        const lines = csv.trim().split("\n");
+        const headers = lines[0].split(",");
+        data = lines.slice(1).map(line => {
+          const values = line.split(",");
+          let entry = {};
+          headers.forEach((header, i) => {
+            entry[header.trim()] = values[i] ? values[i].trim() : "";
+          });
+          return entry;
+        });
+
+        // Fill datalist
+        let domains = [...new Set(data.map(row => row["Domain Name"].trim()))];
+        domains.sort().forEach(domain => {
+          let option = document.createElement("option");
+          option.value = domain;
+          domainList.appendChild(option);
+        });
+      });
+
+    document.getElementById("search").addEventListener("change", function() {
+      const input = this.value.trim().toLowerCase();
+      const match = data.find(row => row["Domain Name"].trim().toLowerCase() === input);
+
+      const resultsDiv = document.getElementById("results");
+      const errorDiv = document.getElementById("error");
+      resultsDiv.innerHTML = "";
+      errorDiv.textContent = "";
+
+      if (!match) {
+        errorDiv.textContent = "Domain not found. Please select from the list.";
+        return;
+      }
+
+      let list = "<h2>" + match["Domain Name"] + "</h2><ul>";
+      for (let key in match) {
+        if (key.toLowerCase().includes("deliverable") && match[key]) {
+          list += `<li>${match[key]}</li>`;
+        }
+      }
+      list += "</ul>";
+      resultsDiv.innerHTML = list;
+    });
+  </script>
+</body>
+</html>
