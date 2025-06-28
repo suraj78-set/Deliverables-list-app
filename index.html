@@ -192,8 +192,7 @@
 
       currentResult = `Domain Name,Deliverables\n${match["Domain Name"]},"${deliverables.join('; ')}"`;
     }
-
-function downloadResult() {
+    function downloadResult() {
   if (!currentResult) {
     alert("Please search and select a domain first.");
     return;
@@ -219,6 +218,7 @@ function downloadResult() {
   link.click();
   document.body.removeChild(link);
 }
+
 
     }
 
