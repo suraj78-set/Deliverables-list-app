@@ -192,34 +192,19 @@
 
       currentResult = `Domain Name,Deliverables\n${match["Domain Name"]},"${deliverables.join('; ')}"`;
     }
+
     function downloadResult() {
-  if (!currentResult) {
-    alert("Please search and select a domain first.");
-    return;
-  }
-
-  const inputValue = searchInput.value.trim().toLowerCase();
-  const match = data.find(row => row["Domain Name"].trim().toLowerCase() === inputValue);
-  if (!match) return;
-
-  let csv = "Domain Name\n" + match["Domain Name"] + "\n\nDeliverables\n";
-
-  Object.keys(match).forEach(key => {
-    if (key.toLowerCase().includes("deliverable") && match[key]) {
-      csv += match[key] + "\n";
-    }
-  });
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "selected_domain_deliverables.csv";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-
+      if (!currentResult) {
+        alert("Please search and select a domain first.");
+        return;
+      }
+      const blob = new Blob([currentResult], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "selected_domain_deliverables.csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     function printResults() {
