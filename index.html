@@ -10,7 +10,13 @@
       color: #333;
       padding: 20px;
       text-align: center;
+      opacity: 0;
+      animation: fadeIn 1s ease forwards;
       transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
     }
 
     .header {
@@ -34,12 +40,28 @@
       font-size: 26px;
       font-weight: bold;
       margin: 10px 0;
+      opacity: 0;
+      transform: translateY(-20px);
+      animation: slideIn 1s ease-out 0.3s forwards;
+    }
+
+    @keyframes slideIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     input {
       width: 300px;
       padding: 10px;
       font-size: 16px;
+      transition: border 0.3s;
+    }
+
+    input:focus {
+      border: 2px solid #EA7317;
+      outline: none;
     }
 
     ul {
@@ -55,6 +77,17 @@
       margin: 5px auto;
       width: 60%;
       border-radius: 5px;
+      opacity: 0;
+      transform: translateX(-10px);
+      animation: fadeSlide 0.5s ease forwards;
+      animation-delay: calc(var(--delay, 0) * 0.1s);
+    }
+
+    @keyframes fadeSlide {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
     button {
@@ -66,10 +99,12 @@
       font-size: 14px;
       cursor: pointer;
       margin: 5px;
+      transition: transform 0.2s ease;
     }
 
     button:hover {
       background-color: #ea7317;
+      transform: scale(1.05);
     }
 
     #results {
@@ -172,9 +207,11 @@
       }
 
       let html = `<h2>${match["Domain Name"]}</h2><ul>`;
+      let count = 0;
       for (const key in match) {
         if (key.toLowerCase().includes("deliverable") && match[key]) {
-          html += `<li>${match[key]}</li>`;
+          html += `<li style="--delay:${count}">${match[key]}</li>`;
+          count++;
         }
       }
       html += "</ul>";
@@ -190,7 +227,6 @@
       }
 
       let csv = "Domain Name\n" + match["Domain Name"] + "\n\nDeliverables\n";
-
       Object.keys(match).forEach(key => {
         if (key.toLowerCase().includes("deliverable") && match[key]) {
           csv += match[key] + "\n";
