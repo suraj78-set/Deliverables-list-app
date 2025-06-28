@@ -27,11 +27,13 @@
 
     .logo {
       height: 60px;
+      transition: filter 0.3s ease;
     }
 
     .iac-logo {
       height: 50px;
       margin-bottom: 10px;
+      transition: filter 0.3s ease;
     }
 
     h1 {
@@ -50,38 +52,16 @@
       }
     }
 
-    .autocomplete {
-      position: relative;
-      display: inline-block;
-    }
-
-    #search {
+    input {
       width: 300px;
       padding: 10px;
       font-size: 16px;
+      transition: border 0.3s;
     }
 
-    .suggestions {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: white;
-      border: 1px solid #ccc;
-      max-height: 200px;
-      overflow-y: auto;
-      z-index: 1000;
-    }
-
-    .suggestion-item {
-      padding: 10px;
-      cursor: pointer;
-      text-align: left;
-    }
-
-    .suggestion-item:hover {
-      background-color: #f4a261;
-      color: white;
+    input:focus {
+      border: 2px solid #EA7317;
+      outline: none;
     }
 
     ul {
@@ -169,12 +149,10 @@
 
   <h1>Domain Deliverables Viewer</h1>
 
-  <div class="autocomplete">
-    <input type="text" id="search" placeholder="Type or select a domain name..." autocomplete="off" />
-    <div id="suggestions" class="suggestions" style="display:none;"></div>
-  </div>
-
+  <input type="text" id="search" list="domainList" placeholder="Type or select a domain name..." />
+  <datalist id="domainList"></datalist>
   <br><br>
+
   <button onclick="downloadResult()">⬇️ Download Result</button>
   <button onclick="printResults()">🖨️ Export to PDF</button>
 
@@ -186,7 +164,7 @@
   <script>
     let data = [];
     const searchInput = document.getElementById("search");
-    const suggestionsBox = document.getElementById("suggestions");
+    const domainList = document.getElementById("domainList");
     const resultsDiv = document.getElementById("results");
     const errorDiv = document.getElementById("error");
     const darkModeBtn = document.getElementById("darkModeToggle");
@@ -204,48 +182,27 @@
           });
           return entry;
         });
+
+        const domainNames = [...new Set(data.map(row => row["Domain Name"].trim()))];
+        domainNames.sort().forEach(domain => {
+          const option = document.createElement("option");
+          option.value = domain;
+          domainList.appendChild(option);
+        });
       });
 
-    searchInput.addEventListener("input", () => {
-      const input = searchInput.value.toLowerCase();
-      suggestionsBox.innerHTML = "";
-      if (!input) {
-        suggestionsBox.style.display = "none";
-        return;
-      }
-      const matches = [...new Set(data.map(row => row["Domain Name"]))].filter(name =>
-        name.toLowerCase().includes(input)
-      );
+    searchInput.addEventListener("input", updateResult);
+    searchInput.addEventListener("change", updateResult);
 
-      matches.forEach(name => {
-        const div = document.createElement("div");
-        div.classList.add("suggestion-item");
-        div.textContent = name;
-        div.onclick = () => {
-          searchInput.value = name;
-          suggestionsBox.style.display = "none";
-          showResult(name);
-        };
-        suggestionsBox.appendChild(div);
-      });
-
-      suggestionsBox.style.display = matches.length ? "block" : "none";
-    });
-
-    document.addEventListener("click", e => {
-      if (!e.target.closest(".autocomplete")) {
-        suggestionsBox.style.display = "none";
-      }
-    });
-
-    function showResult(selectedName) {
-      const match = data.find(row => row["Domain Name"].trim().toLowerCase() === selectedName.trim().toLowerCase());
+    function updateResult() {
+      const inputValue = searchInput.value.trim().toLowerCase();
+      const match = data.find(row => row["Domain Name"].trim().toLowerCase() === inputValue);
 
       resultsDiv.innerHTML = "";
       errorDiv.textContent = "";
 
       if (!match) {
-        errorDiv.textContent = "Domain not found.";
+        errorDiv.textContent = "Domain not found. Please select from the list.";
         return;
       }
 
@@ -262,8 +219,8 @@
     }
 
     function downloadResult() {
-      const selectedName = searchInput.value.trim();
-      const match = data.find(row => row["Domain Name"].trim().toLowerCase() === selectedName.toLowerCase());
+      const inputValue = searchInput.value.trim().toLowerCase();
+      const match = data.find(row => row["Domain Name"].trim().toLowerCase() === inputValue);
       if (!match) {
         alert("Please search and select a domain first.");
         return;
