@@ -191,8 +191,7 @@
         });
       });
 
-    searchInput.addEventListener("input", updateResult);
-    searchInput.addEventListener("change", updateResult);
+    searchInput.addEventListener("input", debounce(updateResult, 150));
 
     function updateResult() {
       const inputValue = searchInput.value.trim().toLowerCase();
@@ -216,6 +215,14 @@
       }
       html += "</ul>";
       resultsDiv.innerHTML = html;
+    }
+
+    function debounce(func, delay) {
+      let timer;
+      return function () {
+        clearTimeout(timer);
+        timer = setTimeout(() => func.apply(this, arguments), delay);
+      };
     }
 
     function downloadResult() {
