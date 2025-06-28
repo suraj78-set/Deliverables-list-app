@@ -10,33 +10,40 @@
       padding: 20px;
       text-align: center;
     }
+
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
+
     .logo {
       height: 60px;
     }
+
     .iac-logo {
       height: 50px;
       margin-bottom: 10px;
     }
+
     h1 {
       font-size: 26px;
       font-weight: bold;
       margin: 10px 0;
     }
+
     input {
       width: 300px;
       padding: 10px;
       font-size: 16px;
     }
+
     ul {
       list-style: none;
       padding: 0;
       margin-top: 20px;
     }
+
     li {
       background: #EA7317;
       color: white;
@@ -45,31 +52,61 @@
       width: 60%;
       border-radius: 5px;
     }
+
+    button {
+      padding: 10px 15px;
+      background-color: #f4a261;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    button:hover {
+      background-color: #ea7317;
+    }
+
+    #results {
+      margin-top: 20px;
+    }
+
     #error {
       color: red;
-      margin-top: 20px;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
+
   <div class="header">
     <img src="ccpl_logo.png" alt="CCPL Logo" class="logo">
-    <img src="gac_foundation_logo.png" alt="GAC Logo" class="logo">
+    <img src="gac_foundation_logo.png" alt="GAC Foundation Logo" class="logo">
   </div>
+
   <img src="iac_Logo.png" alt="IAC Logo" class="iac-logo">
+
   <h1>Domain Deliverables Viewer</h1>
 
-  <input type="text" id="search" list="domainList" placeholder="Search Domain Name..." />
+  <input type="text" id="search" list="domainList" placeholder="Type or select a domain name..." />
   <datalist id="domainList"></datalist>
+  <br><br>
+
+  <button onclick="downloadCSV()">⬇️ Download CSV</button>
+  <button onclick="printResults()">🖨️ Export to PDF</button>
 
   <div id="results"></div>
   <div id="error"></div>
 
   <script>
     let data = [];
-    let domainList = document.getElementById("domainList");
+    const searchInput = document.getElementById("search");
+    const domainList = document.getElementById("domainList");
+    const resultsDiv = document.getElementById("results");
+    const errorDiv = document.getElementById("error");
 
-    // Load CSV
+    // Load CSV data
     fetch("domain_deliverables.csv")
       .then(response => response.text())
       .then(csv => {
@@ -84,21 +121,22 @@
           return entry;
         });
 
-        // Fill datalist
-        let domains = [...new Set(data.map(row => row["Domain Name"].trim()))];
-        domains.sort().forEach(domain => {
-          let option = document.createElement("option");
+        const domainNames = [...new Set(data.map(row => row["Domain Name"].trim()))];
+        domainNames.sort().forEach(domain => {
+          const option = document.createElement("option");
           option.value = domain;
           domainList.appendChild(option);
         });
       });
 
-    document.getElementById("search").addEventListener("change", function() {
-      const input = this.value.trim().toLowerCase();
-      const match = data.find(row => row["Domain Name"].trim().toLowerCase() === input);
+    // Handle input and selection
+    searchInput.addEventListener("input", updateResult);
+    searchInput.addEventListener("change", updateResult);
 
-      const resultsDiv = document.getElementById("results");
-      const errorDiv = document.getElementById("error");
+    function updateResult() {
+      const inputValue = searchInput.value.trim().toLowerCase();
+      const match = data.find(row => row["Domain Name"].trim().toLowerCase() === inputValue);
+
       resultsDiv.innerHTML = "";
       errorDiv.textContent = "";
 
@@ -107,15 +145,33 @@
         return;
       }
 
-      let list = "<h2>" + match["Domain Name"] + "</h2><ul>";
-      for (let key in match) {
+      let html = `<h2>${match["Domain Name"]}</h2><ul>`;
+      for (const key in match) {
         if (key.toLowerCase().includes("deliverable") && match[key]) {
-          list += `<li>${match[key]}</li>`;
+          html += `<li>${match[key]}</li>`;
         }
       }
-      list += "</ul>";
-      resultsDiv.innerHTML = list;
-    });
+      html += "</ul>";
+      resultsDiv.innerHTML = html;
+    }
+
+    function downloadCSV() {
+      const link = document.createElement("a");
+      link.href = "domain_deliverables.csv";
+      link.download = "domain_deliverables.csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function printResults() {
+      const printWindow = window.open('', '', 'width=800,height=600');
+      printWindow.document.write('<html><head><title>Deliverables</title></head><body>');
+      printWindow.document.write(resultsDiv.innerHTML);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.print();
+    }
   </script>
 </body>
 </html>
